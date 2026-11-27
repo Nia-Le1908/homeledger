@@ -1,152 +1,87 @@
-// HomeLedger main — router and control wiring.
-// Hash routes: #/ dashboard, #/transactions, #/budgets, #/goals, #/reports.
-// All controls are wired once here with delegated events, so a re-render
-// never loses a handler. window.__shotReady is false while a page renders
-// and true once it is on screen, so screenshot capture knows when to shoot.
+'use strict';
+/* HomeLedger router — hash routes, one render per navigation.
+   window.__shotReady is false while a view renders and true once the
+   page is on screen, so screenshots can wait for it. */
 
-window.__shotReady = false;
+var HLMain = (function () {
+  var TITLES = {
+    '': 'HomeLedger — Nguyen family budget',
+    'transactions': 'Transactions — HomeLedger',
+    'budgets': 'Budgets — HomeLedger',
+    'goals': 'Family goals — HomeLedger',
+    'reports': 'Reports — HomeLedger'
+  };
 
-const ROUTES = {
-  "/": renderDashboard,
-  "/transactions": renderTransactions,
-  "/budgets": renderBudgets,
-  "/goals": renderGoals,
-  "/reports": renderReports,
-};
-
-function currentRoute() {
-  const hash = window.location.hash || "#/";
-  const path = hash.slice(1).split("?")[0] || "/";
-  return ROUTES[path] ? path : "/";
-}
-
-function render() {
-  window.__shotReady = false;
-  const route = currentRoute();
-  const view = document.getElementById("view");
-  view.innerHTML = ROUTES[route]();
-  document.querySelectorAll("nav a").forEach(function (a) {
-    const href = a.getAttribute("href") || "";
-    if (href.slice(1) === route) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
-  });
-  const TITLES = { "/": "Dashboard", "/transactions": "Transactions", "/budgets": "Budgets", "/goals": "Goals", "/reports": "Reports" };
-  document.title = "HomeLedger — " + (TITLES[route] || "Dashboard");
-  window.scrollTo(0, 0);
-  requestAnimationFrame(function () {
-    window.__shotReady = true;
-  });
-}
-
-function rerender() {
-  render();
-}
-
-// ---- delegated controls ----------------------------------------------
-
-document.addEventListener("click", function (e) {
-  const el = e.target.closest("[data-action]");
-  if (!el) return;
-  const action = el.getAttribute("data-action");
-  if (action === "pick-month") {
-    store.month = el.getAttribute("data-month");
-    rerender();
-  } else if (action === "pick-range") {
-    reportRange = el.getAttribute("data-range");
-    rerender();
-  } else if (action === "delete-tx") {
-    deleteTransaction(el.getAttribute("data-id"));
-    rerender();
-  } else if (action === "reset-data") {
-    if (window.confirm("Reset HomeLedger to the original demo data? Your changes will be lost.")) {
-      resetStore();
-      txFilter = { month: "2026-11", category: "all", type: "all", search: "" };
-      rerender();
+  function parseHash() {
+    var raw = window.location.hash || '#/';
+    var hash = raw.replace(/^#\/?/, '');
+    var parts = hash.split('?');
+    var route = parts[0] || '';
+    var params = {};
+    if (parts[1]) {
+      parts[1].split('&').forEach(function (pair) {
+        var kv = pair.split('=');
+        if (kv[0]) params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+      });
     }
+    return { route: route, params: params };
   }
-});
 
-document.addEventListener("change", function (e) {
-  const el = e.target;
-  if (el.hasAttribute("data-edit-amount")) {
-    const ok = updateTransactionAmount(el.getAttribute("data-edit-amount"), el.value);
-    if (!ok) {
-      el.classList.add("invalid");
-      el.value = "";
-      el.focus();
-    } else {
-      rerender();
-    }
-  } else if (el.hasAttribute("data-edit-budget")) {
-    const ok = setBudget(store.month, el.getAttribute("data-edit-budget"), el.value);
-    if (!ok) {
-      el.classList.add("invalid");
-    } else {
-      rerender();
-    }
-  } else if (el.hasAttribute("data-filter")) {
-    txFilter[el.getAttribute("data-filter")] = el.value;
-    rerender();
-    const back = document.querySelector('[data-filter="' + el.getAttribute("data-filter") + '"]');
-    if (back) back.focus();
-  }
-});
+  var currentParams = {};
 
-document.addEventListener("input", function (e) {
-  const el = e.target;
-  if (el.hasAttribute("data-filter") && el.getAttribute("data-filter") === "search") {
-    txFilter.search = el.value;
-    // Live-filter without a full re-render so the caret stays put.
-    const view = document.getElementById("view");
-    const rows = filteredTransactions();
-    const tbody = view.querySelector(".tx-table tbody");
-    if (tbody) {
-      tbody.innerHTML =
-        rows.length > 0
-          ? rows
-              .map(function (t) {
-                return txRowHTML(t, true);
-              })
-              .join("")
-          : '<tr><td colspan="5" class="empty">No transactions match these filters. Try clearing the search.</td></tr>';
-      const count = view.querySelector(".count");
-      if (count) count.textContent = rows.length + " transaction" + (rows.length === 1 ? "" : "s") + " shown";
+  function render(keepSearch, extraParams) {
+    window.__shotReady = false;
+    var parsed = parseHash();
+    var route = parsed.route;
+    var routeChanged = route !== (render.lastRoute || '');
+    render.lastRoute = route;
+    if (extraParams) {
+      currentParams = extraParams;
+    } else if (Object.keys(parsed.params).length) {
+      currentParams = parsed.params;
+    } else if (routeChanged) {
+      currentParams = {};
     }
-  }
-});
+    var view;
+    if (route === 'transactions') view = HLViews.transactions(currentParams);
+    else if (route === 'budgets') view = HLViews.budgets();
+    else if (route === 'goals') view = HLViews.goals();
+    else if (route === 'reports') view = HLViews.reports(currentParams);
+    else view = HLViews.dashboard();
 
-document.addEventListener("submit", function (e) {
-  e.preventDefault();
-  const form = e.target;
-  if (form.id === "add-tx-form") {
-    const data = new FormData(form);
-    const amount = Number(data.get("amount"));
-    const date = String(data.get("date") || "");
-    const desc = String(data.get("desc") || "").trim();
-    if (!date || !desc || !isFinite(amount) || amount <= 0) return;
-    addTransaction({
-      date: date,
-      desc: desc,
-      cat: String(data.get("cat")),
-      amount: amount,
-      type: String(data.get("type")),
+    document.title = TITLES[route] || TITLES[''];
+    var mount = document.getElementById('view');
+    mount.innerHTML = view.html;
+    document.querySelectorAll('.nav a').forEach(function (a) {
+      var href = a.getAttribute('href');
+      var r = href.replace(/^#\/?/, '').split('?')[0];
+      a.classList.toggle('on', r === route || (r === '' && route === ''));
+      if (r === route || (r === '' && route === '')) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
     });
-    txFilter.month = monthOf({ date: date });
-    form.reset();
-    form.querySelector('[name="date"]').value = "2026-11-27";
-    render();
-    const note = document.getElementById("tx-added");
-    if (note) note.textContent = "Added “" + desc + "” — " + fmtVND(amount) + ".";
-  } else if (form.classList.contains("goal-form")) {
-    const data = new FormData(form);
-    const amount = Number(data.get("amount"));
-    if (!isFinite(amount) || amount <= 0) return;
-    addToGoal(form.getAttribute("data-goal"), amount);
-    form.reset();
+    view.wire(mount);
+    if (keepSearch) {
+      var q = mount.querySelector('input[name="q"]');
+      if (q) { q.focus(); var v = q.value; q.value = ''; q.value = v; }
+    }
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () { window.__shotReady = true; });
+    });
+  }
+
+  function start() {
+    window.__shotReady = false;
+    window.addEventListener('hashchange', function () { render(); });
+    HLStore.onChange(function () { render(); });
+    document.getElementById('reset-demo').addEventListener('click', function () {
+      if (window.confirm('Reset HomeLedger to the original 99 transactions? Your edits will be lost.')) {
+        HLStore.resetAll();
+      }
+    });
     render();
   }
-});
 
-loadStore();
-window.addEventListener("hashchange", render);
-render();
+  return { render: render, start: start };
+})();
+
+document.addEventListener('DOMContentLoaded', HLMain.start);

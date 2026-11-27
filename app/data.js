@@ -1,251 +1,137 @@
-// HomeLedger — the Nguyen family's household budget data.
-// Two adults (Minh & Lan) and one child (An, 8), living in Thanh Xuan, Hanoi.
-// Every figure on the site is computed from the transactions below, so the
-// dashboard totals, the budget bars and the reports can never disagree.
-// Amounts are Vietnamese dong (VND). Rows are [date, description, category,
-// amount, type] where type is "income", "expense" or "savings" (a transfer
-// into the savings account, counted as saved money, not as spending).
+'use strict';
+/* HomeLedger seed data — the Nguyen family, Hanoi.
+   99 transactions, 1 Sep – 26 Nov 2026. Amounts are Vietnamese dong (VND).
+   "Spent" everywhere in the app means the 8 budgeted categories only;
+   Savings transfers are money moved to a goal, not spending. */
 
-const HOUSEHOLD = {
-  name: "The Nguyen family",
-  members: "Minh, Lan & An (8 years old)",
-  home: "Thanh Xuan, Hanoi",
-  currency: "VND",
-};
-
-const MONTHS = ["2026-09", "2026-10", "2026-11"];
-
-const MONTH_LABELS = {
-  "2026-09": "September 2026",
-  "2026-10": "October 2026",
-  "2026-11": "November 2026",
-};
-
-const CATEGORIES = [
-  "Groceries",
-  "Rent & utilities",
-  "Transport",
-  "Dining out",
-  "Health",
-  "Entertainment",
-  "Kids & school",
-  "Home",
-  "Savings",
-];
-
-// Monthly spending limit per category (VND). The same limits apply every
-// month; October's dining and November's home repairs are the two months
-// where real life pushed a category over its limit.
-const BUDGETS = {
-  "2026-09": {
-    "Groceries": 8000000,
-    "Rent & utilities": 12000000,
-    "Transport": 3000000,
-    "Dining out": 3000000,
-    "Health": 2000000,
-    "Entertainment": 2500000,
-    "Kids & school": 4000000,
-    "Home": 2500000,
+var HL_DATA = {
+  household: {
+    name: 'Nguyen family',
+    place: 'Hanoi',
+    members: 'Two adults + one child',
+    periodStart: '2026-09-01',
+    periodEnd: '2026-11-26',
+    incomeNote: 'About ₫45,000,000 salary + about ₫3,000,000 side income a month.'
   },
-  "2026-10": {
-    "Groceries": 8000000,
-    "Rent & utilities": 12000000,
-    "Transport": 3000000,
-    "Dining out": 3000000,
-    "Health": 2000000,
-    "Entertainment": 2500000,
-    "Kids & school": 4000000,
-    "Home": 2500000,
-  },
-  "2026-11": {
-    "Groceries": 8000000,
-    "Rent & utilities": 12000000,
-    "Transport": 3000000,
-    "Dining out": 3000000,
-    "Health": 2000000,
-    "Entertainment": 2500000,
-    "Kids & school": 4000000,
-    "Home": 2500000,
-  },
+  categories: [
+    { id: 'groceries', name: 'Groceries', limit: 7000000 },
+    { id: 'rent', name: 'Rent & utilities', limit: 13000000, fixed: true },
+    { id: 'transport', name: 'Transport', limit: 2500000 },
+    { id: 'dining', name: 'Dining out', limit: 2000000 },
+    { id: 'health', name: 'Health', limit: 1500000 },
+    { id: 'entertainment', name: 'Entertainment', limit: 1200000 },
+    { id: 'kids', name: 'Kids & school', limit: 3500000 },
+    { id: 'home', name: 'Home', limit: 1500000 },
+    { id: 'savings', name: 'Savings', limit: null }
+  ],
+  goals: [
+    { id: 'emergency', name: 'Emergency fund', target: 100000000, saved: 62000000, monthly: 5000000, note: 'Six months of essential spending, kept in a separate savings account.' },
+    { id: 'dalat', name: 'Family holiday — Da Lat', target: 25000000, saved: 14500000, monthly: 2000000, note: 'Five days in Da Lat next spring: train, guesthouse and food.' },
+    { id: 'washer', name: 'New washing machine', target: 12000000, saved: 8400000, monthly: 1500000, note: 'Replace the 9-year-old machine before it breaks for good.' }
+  ],
+  /* kind: expense | income | savings. ids t001..t099. */
+  transactions: [
+    /* ---------- September 2026 (33) ---------- */
+    { id: 't001', date: '2026-09-01', desc: 'Monthly rent — Thanh Xuan apartment', category: 'rent', kind: 'expense', amount: 12000000 },
+    { id: 't002', date: '2026-09-01', desc: 'School tuition — term 1', category: 'kids', kind: 'expense', amount: 2400000 },
+    { id: 't003', date: '2026-09-02', desc: 'Weekly shop at Co.opmart', category: 'groceries', kind: 'expense', amount: 1480000 },
+    { id: 't004', date: '2026-09-03', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 520000 },
+    { id: 't005', date: '2026-09-05', desc: 'Salary — Nguyen household', category: 'savings', kind: 'income', amount: 45000000 },
+    { id: 't006', date: '2026-09-06', desc: 'Transfer to emergency fund', category: 'savings', kind: 'savings', amount: 5000000 },
+    { id: 't007', date: '2026-09-06', desc: 'Family dinner — Bun cha Huong Lien', category: 'dining', kind: 'expense', amount: 680000 },
+    { id: 't008', date: '2026-09-07', desc: 'Weekend market — Thanh Xuan', category: 'groceries', kind: 'expense', amount: 820000 },
+    { id: 't009', date: '2026-09-07', desc: 'Cinema — family movie night', category: 'entertainment', kind: 'expense', amount: 420000 },
+    { id: 't010', date: '2026-09-08', desc: 'Grab rides to school', category: 'transport', kind: 'expense', amount: 310000 },
+    { id: 't011', date: '2026-09-08', desc: 'Cleaning supplies & detergent', category: 'home', kind: 'expense', amount: 500000 },
+    { id: 't012', date: '2026-09-09', desc: 'School lunch fees', category: 'kids', kind: 'expense', amount: 780000 },
+    { id: 't013', date: '2026-09-10', desc: 'Weekly shop at VinMart', category: 'groceries', kind: 'expense', amount: 1520000 },
+    { id: 't014', date: '2026-09-11', desc: 'Pharmacy — vitamins & medicine', category: 'health', kind: 'expense', amount: 350000 },
+    { id: 't015', date: '2026-09-12', desc: 'Electricity bill EVN', category: 'rent', kind: 'expense', amount: 980000 },
+    { id: 't016', date: '2026-09-13', desc: 'Lunch with colleagues', category: 'dining', kind: 'expense', amount: 320000 },
+    { id: 't017', date: '2026-09-14', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 480000 },
+    { id: 't018', date: '2026-09-15', desc: 'Streaming subscription', category: 'entertainment', kind: 'expense', amount: 250000 },
+    { id: 't019', date: '2026-09-16', desc: 'Fresh food — local wet market', category: 'groceries', kind: 'expense', amount: 640000 },
+    { id: 't020', date: '2026-09-17', desc: 'Textbooks & stationery', category: 'kids', kind: 'expense', amount: 540000 },
+    { id: 't021', date: '2026-09-18', desc: 'Freelance design work', category: 'savings', kind: 'income', amount: 3000000 },
+    { id: 't022', date: '2026-09-19', desc: 'Pizza night with the kids', category: 'dining', kind: 'expense', amount: 460000 },
+    { id: 't023', date: '2026-09-20', desc: 'Bus cards top-up', category: 'transport', kind: 'expense', amount: 240000 },
+    { id: 't024', date: '2026-09-20', desc: 'Transfer to Da Lat holiday fund', category: 'savings', kind: 'savings', amount: 2000000 },
+    { id: 't025', date: '2026-09-21', desc: 'Weekly shop at Co.opmart', category: 'groceries', kind: 'expense', amount: 1590000 },
+    { id: 't026', date: '2026-09-21', desc: 'Books & comics for the kids', category: 'entertainment', kind: 'expense', amount: 180000 },
+    { id: 't027', date: '2026-09-22', desc: 'Dental check-up for Minh', category: 'health', kind: 'expense', amount: 890000 },
+    { id: 't028', date: '2026-09-24', desc: 'Coffee & banh mi — office week', category: 'dining', kind: 'expense', amount: 240000 },
+    { id: 't029', date: '2026-09-25', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 770000 },
+    { id: 't030', date: '2026-09-26', desc: 'New curtains for the living room', category: 'home', kind: 'expense', amount: 950000 },
+    { id: 't031', date: '2026-09-27', desc: 'Snacks & drinks for the kids', category: 'groceries', kind: 'expense', amount: 800000 },
+    { id: 't032', date: '2026-09-28', desc: 'Hotpot with friends', category: 'dining', kind: 'expense', amount: 160000 },
+    { id: 't033', date: '2026-09-29', desc: 'Board game — weekend play', category: 'entertainment', kind: 'expense', amount: 130000 },
+    /* ---------- October 2026 (33) ---------- */
+    { id: 't034', date: '2026-10-01', desc: 'Monthly rent — Thanh Xuan apartment', category: 'rent', kind: 'expense', amount: 12000000 },
+    { id: 't035', date: '2026-10-01', desc: 'School tuition — term 1 (second part)', category: 'kids', kind: 'expense', amount: 2300000 },
+    { id: 't036', date: '2026-10-02', desc: 'Weekly shop at Co.opmart', category: 'groceries', kind: 'expense', amount: 1620000 },
+    { id: 't037', date: '2026-10-03', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 540000 },
+    { id: 't038', date: '2026-10-04', desc: 'Family dinner — Bun cha Huong Lien', category: 'dining', kind: 'expense', amount: 720000 },
+    { id: 't039', date: '2026-10-05', desc: 'Salary — Nguyen household', category: 'savings', kind: 'income', amount: 45000000 },
+    { id: 't040', date: '2026-10-06', desc: 'Transfer to emergency fund', category: 'savings', kind: 'savings', amount: 5000000 },
+    { id: 't041', date: '2026-10-06', desc: 'Cleaning supplies, towels & storage boxes', category: 'home', kind: 'expense', amount: 880000 },
+    { id: 't042', date: '2026-10-07', desc: 'Pharmacy — vitamins & medicine', category: 'health', kind: 'expense', amount: 410000 },
+    { id: 't043', date: '2026-10-08', desc: 'Weekend market — Thanh Xuan', category: 'groceries', kind: 'expense', amount: 880000 },
+    { id: 't044', date: '2026-10-09', desc: 'Grab rides to school', category: 'transport', kind: 'expense', amount: 340000 },
+    { id: 't045', date: '2026-10-09', desc: 'Cinema — family movie night', category: 'entertainment', kind: 'expense', amount: 480000 },
+    { id: 't046', date: '2026-10-10', desc: 'Lunch with colleagues', category: 'dining', kind: 'expense', amount: 380000 },
+    { id: 't047', date: '2026-10-11', desc: 'Weekly shop at VinMart', category: 'groceries', kind: 'expense', amount: 1780000 },
+    { id: 't048', date: '2026-10-12', desc: 'School lunch fees', category: 'kids', kind: 'expense', amount: 680000 },
+    { id: 't049', date: '2026-10-13', desc: 'Electricity bill EVN', category: 'rent', kind: 'expense', amount: 1050000 },
+    { id: 't050', date: '2026-10-14', desc: 'Eye check-up — new glasses', category: 'health', kind: 'expense', amount: 940000 },
+    { id: 't051', date: '2026-10-15', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 610000 },
+    { id: 't052', date: '2026-10-15', desc: 'Streaming subscription', category: 'entertainment', kind: 'expense', amount: 250000 },
+    { id: 't053', date: '2026-10-16', desc: 'Birthday dinner for Lan', category: 'dining', kind: 'expense', amount: 640000 },
+    { id: 't054', date: '2026-10-17', desc: 'Fresh food — local wet market', category: 'groceries', kind: 'expense', amount: 720000 },
+    { id: 't055', date: '2026-10-17', desc: 'Freelance design work', category: 'savings', kind: 'income', amount: 3500000 },
+    { id: 't056', date: '2026-10-18', desc: 'Replacement light bulbs & fan repair', category: 'home', kind: 'expense', amount: 720000 },
+    { id: 't057', date: '2026-10-19', desc: 'Extra English class', category: 'kids', kind: 'expense', amount: 450000 },
+    { id: 't058', date: '2026-10-21', desc: 'Bus cards top-up', category: 'transport', kind: 'expense', amount: 240000 },
+    { id: 't059', date: '2026-10-21', desc: 'Transfer to washing machine fund', category: 'savings', kind: 'savings', amount: 1500000 },
+    { id: 't060', date: '2026-10-22', desc: 'Weekly shop at Co.opmart', category: 'groceries', kind: 'expense', amount: 1420000 },
+    { id: 't061', date: '2026-10-23', desc: 'Pizza night with the kids', category: 'dining', kind: 'expense', amount: 420000 },
+    { id: 't062', date: '2026-10-24', desc: 'Weekend trip snacks & games', category: 'entertainment', kind: 'expense', amount: 420000 },
+    { id: 't063', date: '2026-10-25', desc: 'Cold medicine & throat spray', category: 'health', kind: 'expense', amount: 230000 },
+    { id: 't064', date: '2026-10-27', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 750000 },
+    { id: 't065', date: '2026-10-28', desc: 'Mid-Autumn treats & fruit', category: 'groceries', kind: 'expense', amount: 700000 },
+    { id: 't066', date: '2026-10-30', desc: 'Hotpot with friends', category: 'dining', kind: 'expense', amount: 180000 },
+    /* ---------- November 2026, 1–26 Nov (33) ---------- */
+    { id: 't067', date: '2026-11-01', desc: 'Monthly rent — Thanh Xuan apartment', category: 'rent', kind: 'expense', amount: 12000000 },
+    { id: 't068', date: '2026-11-02', desc: 'School tuition — term 2 first part', category: 'kids', kind: 'expense', amount: 2200000 },
+    { id: 't069', date: '2026-11-02', desc: 'Weekly shop at Co.opmart', category: 'groceries', kind: 'expense', amount: 1480000 },
+    { id: 't070', date: '2026-11-03', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 480000 },
+    { id: 't071', date: '2026-11-04', desc: 'Family dinner — Bun cha Huong Lien', category: 'dining', kind: 'expense', amount: 640000 },
+    { id: 't072', date: '2026-11-05', desc: 'Salary — Nguyen household', category: 'savings', kind: 'income', amount: 45000000 },
+    { id: 't073', date: '2026-11-05', desc: 'Cleaning supplies & detergent', category: 'home', kind: 'expense', amount: 380000 },
+    { id: 't074', date: '2026-11-06', desc: 'Transfer to emergency fund', category: 'savings', kind: 'savings', amount: 4000000 },
+    { id: 't075', date: '2026-11-06', desc: 'Cinema — family movie night', category: 'entertainment', kind: 'expense', amount: 380000 },
+    { id: 't076', date: '2026-11-07', desc: 'Weekend market — Thanh Xuan', category: 'groceries', kind: 'expense', amount: 760000 },
+    { id: 't077', date: '2026-11-08', desc: 'Grab rides to school', category: 'transport', kind: 'expense', amount: 290000 },
+    { id: 't078', date: '2026-11-09', desc: 'Pharmacy — vitamins & medicine', category: 'health', kind: 'expense', amount: 620000 },
+    { id: 't079', date: '2026-11-10', desc: 'Weekly shop at VinMart', category: 'groceries', kind: 'expense', amount: 1520000 },
+    { id: 't080', date: '2026-11-10', desc: 'School lunch fees', category: 'kids', kind: 'expense', amount: 540000 },
+    { id: 't081', date: '2026-11-11', desc: 'Lunch with colleagues', category: 'dining', kind: 'expense', amount: 360000 },
+    { id: 't082', date: '2026-11-12', desc: 'Electricity bill EVN', category: 'rent', kind: 'expense', amount: 900000 },
+    { id: 't083', date: '2026-11-14', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 540000 },
+    { id: 't084', date: '2026-11-14', desc: 'Streaming subscription', category: 'entertainment', kind: 'expense', amount: 250000 },
+    { id: 't085', date: '2026-11-15', desc: 'Sunday brunch with grandparents', category: 'dining', kind: 'expense', amount: 520000 },
+    { id: 't086', date: '2026-11-15', desc: 'Fresh food — local wet market', category: 'groceries', kind: 'expense', amount: 680000 },
+    { id: 't087', date: '2026-11-16', desc: 'Freelance design work', category: 'savings', kind: 'income', amount: 2600000 },
+    { id: 't088', date: '2026-11-17', desc: 'Replacement shower head', category: 'home', kind: 'expense', amount: 560000 },
+    { id: 't089', date: '2026-11-18', desc: 'Extra English class', category: 'kids', kind: 'expense', amount: 360000 },
+    { id: 't090', date: '2026-11-19', desc: 'Transfer to Da Lat holiday fund', category: 'savings', kind: 'savings', amount: 1500000 },
+    { id: 't091', date: '2026-11-25', desc: 'Petrol — Petrolimex', category: 'transport', kind: 'expense', amount: 520000 },
+    { id: 't092', date: '2026-11-20', desc: 'Weekly shop at Co.opmart', category: 'groceries', kind: 'expense', amount: 1180000 },
+    { id: 't093', date: '2026-11-20', desc: 'Bus cards top-up', category: 'transport', kind: 'expense', amount: 220000 },
+    { id: 't094', date: '2026-11-21', desc: 'Pizza night with the kids', category: 'dining', kind: 'expense', amount: 280000 },
+    { id: 't095', date: '2026-11-22', desc: 'Cold medicine & throat spray', category: 'health', kind: 'expense', amount: 280000 },
+    { id: 't096', date: '2026-11-23', desc: 'Books & comics for the kids', category: 'entertainment', kind: 'expense', amount: 220000 },
+    { id: 't097', date: '2026-11-24', desc: 'Snacks & drinks for the kids', category: 'groceries', kind: 'expense', amount: 680000 },
+    { id: 't098', date: '2026-11-24', desc: 'Kitchen towels & storage boxes', category: 'home', kind: 'expense', amount: 260000 },
+    { id: 't099', date: '2026-11-25', desc: 'Coffee & banh mi — office week', category: 'dining', kind: 'expense', amount: 150000 }
+  ]
 };
-
-const RAW_TRANSACTIONS = [
-  // ---- September 2026: income 53,400,000; spending 31,650,000 ----
-  ["2026-09-01", "Rent — Thanh Xuan apartment", "Rent & utilities", 9500000, "expense"],
-  ["2026-09-02", "Electricity bill EVN", "Rent & utilities", 920000, "expense"],
-  ["2026-09-03", "Weekly shop at Co.opmart", "Groceries", 1720000, "expense"],
-  ["2026-09-03", "Internet FPT", "Rent & utilities", 350000, "expense"],
-  ["2026-09-04", "Petrol — Minh's motorbike", "Transport", 420000, "expense"],
-  ["2026-09-05", "Salary — Minh (software engineer)", "Income", 28000000, "income"],
-  ["2026-09-05", "School lunch fees — An", "Kids & school", 1200000, "expense"],
-  ["2026-09-06", "Pharmacy — vitamins & plasters", "Health", 320000, "expense"],
-  ["2026-09-07", "Family dinner at Quan An Ngon", "Dining out", 780000, "expense"],
-  ["2026-09-08", "Grab rides to work", "Transport", 260000, "expense"],
-  ["2026-09-09", "Weekly shop at VinMart", "Groceries", 1800000, "expense"],
-  ["2026-09-10", "Salary — Lan (accountant)", "Income", 22000000, "income"],
-  ["2026-09-10", "Water bill", "Rent & utilities", 240000, "expense"],
-  ["2026-09-11", "English class — An", "Kids & school", 1500000, "expense"],
-  ["2026-09-12", "Coffee with friends", "Dining out", 180000, "expense"],
-  ["2026-09-13", "Cinema — family movie night", "Entertainment", 420000, "expense"],
-  ["2026-09-14", "Petrol — Lan's motorbike", "Transport", 380000, "expense"],
-  ["2026-09-15", "Weekly shop at Co.opmart", "Groceries", 1900000, "expense"],
-  ["2026-09-16", "Netflix + Spotify", "Entertainment", 320000, "expense"],
-  ["2026-09-17", "Market top-up — vegetables & fruit", "Groceries", 450000, "expense"],
-  ["2026-09-18", "Dental check-up — Lan", "Health", 650000, "expense"],
-  ["2026-09-19", "Bubble tea & snacks — An", "Dining out", 150000, "expense"],
-  ["2026-09-20", "Side income — Lan's online shop", "Income", 3400000, "income"],
-  ["2026-09-20", "Motorbike service", "Transport", 680000, "expense"],
-  ["2026-09-21", "Weekly shop at VinMart", "Groceries", 1650000, "expense"],
-  ["2026-09-22", "New school books — An", "Kids & school", 640000, "expense"],
-  ["2026-09-23", "Cleaning supplies & detergent", "Home", 420000, "expense"],
-  ["2026-09-24", "Dinner at a hotpot restaurant", "Dining out", 950000, "expense"],
-  ["2026-09-25", "Phone top-up — both phones", "Rent & utilities", 300000, "expense"],
-  ["2026-09-25", "Gym membership — Lan (quarterly)", "Health", 600000, "expense"],
-  ["2026-09-26", "New curtains for the living room", "Home", 1150000, "expense"],
-  ["2026-09-27", "Day trip to Ba Vi — petrol & food", "Entertainment", 1380000, "expense"],
-  ["2026-09-27", "Market top-up — vegetables & fruit", "Groceries", 420000, "expense"],
-  ["2026-09-28", "Monthly sweep into savings", "Savings", 21750000, "savings"],
-
-  // ---- October 2026: income 53,700,000; spending 30,710,000 ----
-  ["2026-10-01", "Rent — Thanh Xuan apartment", "Rent & utilities", 9500000, "expense"],
-  ["2026-10-02", "Electricity bill EVN", "Rent & utilities", 880000, "expense"],
-  ["2026-10-03", "Internet FPT", "Rent & utilities", 350000, "expense"],
-  ["2026-10-04", "Weekly shop at Co.opmart", "Groceries", 1780000, "expense"],
-  ["2026-10-05", "Salary — Minh (software engineer)", "Income", 28000000, "income"],
-  ["2026-10-05", "Petrol — Minh's motorbike", "Transport", 430000, "expense"],
-  ["2026-10-06", "School lunch fees — An", "Kids & school", 1200000, "expense"],
-  ["2026-10-07", "Lan's birthday dinner — family & grandparents", "Dining out", 1250000, "expense"],
-  ["2026-10-08", "Pharmacy — cold medicine", "Health", 280000, "expense"],
-  ["2026-10-09", "Weekly shop at VinMart", "Groceries", 1860000, "expense"],
-  ["2026-10-10", "Salary — Lan (accountant)", "Income", 22000000, "income"],
-  ["2026-10-10", "Water bill", "Rent & utilities", 250000, "expense"],
-  ["2026-10-11", "English class — An", "Kids & school", 1500000, "expense"],
-  ["2026-10-12", "Coffee & cake with friends", "Dining out", 210000, "expense"],
-  ["2026-10-13", "Petrol — Lan's motorbike", "Transport", 390000, "expense"],
-  ["2026-10-14", "Weekly shop at Co.opmart", "Groceries", 1850000, "expense"],
-  ["2026-10-15", "Mid-Autumn festival gifts", "Entertainment", 680000, "expense"],
-  ["2026-10-16", "Grab rides to work", "Transport", 240000, "expense"],
-  ["2026-10-17", "Hotpot with Lan's colleagues", "Dining out", 720000, "expense"],
-  ["2026-10-18", "Market top-up — vegetables & fruit", "Groceries", 430000, "expense"],
-  ["2026-10-19", "Annual health check — Minh", "Health", 850000, "expense"],
-  ["2026-10-20", "Side income — Lan's online shop", "Income", 3700000, "income"],
-  ["2026-10-20", "Weekly shop at VinMart", "Groceries", 1650000, "expense"],
-  ["2026-10-21", "New shoes — An", "Kids & school", 780000, "expense"],
-  ["2026-10-22", "Netflix + Spotify", "Entertainment", 320000, "expense"],
-  ["2026-10-23", "Dinner at a Korean BBQ", "Dining out", 890000, "expense"],
-  ["2026-10-24", "Motorbike service", "Transport", 620000, "expense"],
-  ["2026-10-25", "Phone top-up — both phones", "Rent & utilities", 300000, "expense"],
-  ["2026-10-26", "Toys — An's birthday gift", "Kids & school", 520000, "expense"],
-  ["2026-10-27", "Market top-up — vegetables & fruit", "Groceries", 430000, "expense"],
-  ["2026-10-28", "Cleaning supplies & detergent", "Home", 380000, "expense"],
-  ["2026-10-29", "Bubble tea & snacks — An", "Dining out", 170000, "expense"],
-  ["2026-10-30", "Monthly sweep into savings", "Savings", 22990000, "savings"],
-
-  // ---- November 2026: income 53,900,000; spending 30,700,000 ----
-  ["2026-11-01", "Rent — Thanh Xuan apartment", "Rent & utilities", 9500000, "expense"],
-  ["2026-11-02", "Electricity bill EVN", "Rent & utilities", 960000, "expense"],
-  ["2026-11-03", "Internet FPT", "Rent & utilities", 350000, "expense"],
-  ["2026-11-04", "Weekly shop at Co.opmart", "Groceries", 1740000, "expense"],
-  ["2026-11-05", "Salary — Minh (software engineer)", "Income", 28000000, "income"],
-  ["2026-11-05", "Petrol — Minh's motorbike", "Transport", 440000, "expense"],
-  ["2026-11-06", "School lunch fees — An", "Kids & school", 1200000, "expense"],
-  ["2026-11-07", "Weekly shop at VinMart", "Groceries", 1840000, "expense"],
-  ["2026-11-08", "Washing machine repair — new drum", "Home", 2150000, "expense"],
-  ["2026-11-09", "Pharmacy — vitamins", "Health", 310000, "expense"],
-  ["2026-11-10", "Salary — Lan (accountant)", "Income", 22000000, "income"],
-  ["2026-11-10", "Water bill", "Rent & utilities", 260000, "expense"],
-  ["2026-11-11", "English class — An", "Kids & school", 1500000, "expense"],
-  ["2026-11-12", "Coffee with friends", "Dining out", 190000, "expense"],
-  ["2026-11-13", "Petrol — Lan's motorbike", "Transport", 400000, "expense"],
-  ["2026-11-14", "Weekly shop at Co.opmart", "Groceries", 1880000, "expense"],
-  ["2026-11-15", "Cinema — family movie night", "Entertainment", 450000, "expense"],
-  ["2026-11-16", "Grab rides to work", "Transport", 270000, "expense"],
-  ["2026-11-17", "Market top-up — vegetables & fruit", "Groceries", 420000, "expense"],
-  ["2026-11-18", "Dinner at a Vietnamese restaurant", "Dining out", 820000, "expense"],
-  ["2026-11-19", "New winter clothes — An", "Kids & school", 890000, "expense"],
-  ["2026-11-20", "Side income — Lan's online shop", "Income", 3900000, "income"],
-  ["2026-11-20", "Weekly shop at VinMart", "Groceries", 1730000, "expense"],
-  ["2026-11-21", "Dinner at a hotpot restaurant", "Dining out", 880000, "expense"],
-  ["2026-11-21", "Netflix + Spotify", "Entertainment", 320000, "expense"],
-  ["2026-11-22", "Motorbike service", "Transport", 650000, "expense"],
-  ["2026-11-23", "Phone top-up — both phones", "Rent & utilities", 300000, "expense"],
-  ["2026-11-24", "Bubble tea & snacks — An", "Dining out", 160000, "expense"],
-  ["2026-11-25", "Books — An", "Entertainment", 290000, "expense"],
-  ["2026-11-26", "Cleaning supplies & detergent", "Home", 410000, "expense"],
-  ["2026-11-27", "Market top-up — vegetables & fruit", "Groceries", 390000, "expense"],
-  ["2026-11-28", "Monthly sweep into savings", "Savings", 23200000, "savings"],
-];
-
-// Savings goals. "saved" is the balance today; "monthly" is the planned
-// contribution each month. The emergency fund is the family's safety net,
-// the holiday is the next big treat, and the washing machine is the next
-// household purchase — the old one was repaired in November and will be
-// replaced in spring.
-const GOALS = [
-  {
-    id: "emergency",
-    name: "Emergency fund",
-    note: "Six months of expenses, for peace of mind.",
-    target: 150000000,
-    saved: 84000000,
-    monthly: 8000000,
-  },
-  {
-    id: "holiday",
-    name: "Family holiday in Da Lat",
-    note: "Four days in Da Lat next summer — train, hotel and food.",
-    target: 30000000,
-    saved: 18500000,
-    monthly: 2000000,
-  },
-  {
-    id: "washer",
-    name: "New washing machine",
-    note: "The old one was repaired in November; we replace it in spring.",
-    target: 12000000,
-    saved: 8200000,
-    monthly: 1500000,
-  },
-];
-
-// Monthly totals for June–August 2026, kept as totals only (no transaction
-// detail). The reports page uses them for its six-month trend view.
-const PAST_SUMMARY = {
-  "2026-06": { income: 52800000, spending: 31200000 },
-  "2026-07": { income: 53100000, spending: 32900000 },
-  "2026-08": { income: 53300000, spending: 30800000 },
-};
-
-const PAST_MONTHS = ["2026-06", "2026-07", "2026-08"];
-
-const PAST_LABELS = {
-  "2026-06": "Jun 2026",
-  "2026-07": "Jul 2026",
-  "2026-08": "Aug 2026",
-};
-
-// One plain-language insight per month, written from the figures above.
-const INSIGHTS = {
-  "2026-09":
-    "September was our calmest month: every category stayed inside its budget, and groceries finished at 99% of the limit.",
-  "2026-10":
-    "Dining out ran 8% over budget in October — Lan's birthday dinner and two evenings out pushed it to ₫3,240,000 against a ₫3,000,000 limit.",
-  "2026-11":
-    "The washing machine repair (₫2,150,000) pushed Home 2% over budget in November, but groceries landed exactly on budget.",
-};
-
-// Turn the compact rows into objects with stable ids.
-function buildTransactions() {
-  return RAW_TRANSACTIONS.map(function (row, i) {
-    return {
-      id: "tx" + (i + 1),
-      date: row[0],
-      desc: row[1],
-      cat: row[2],
-      amount: row[3],
-      type: row[4],
-    };
-  });
-}
-
-const SEED_TRANSACTIONS = buildTransactions();

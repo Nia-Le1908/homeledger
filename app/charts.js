@@ -1,225 +1,93 @@
-// HomeLedger charts — small SVG builders for the donut and the bar charts.
-// No chart library: each function takes plain numbers and returns an SVG
-// string, so the pictures always match the figures in store.js.
+'use strict';
+/* HomeLedger charts — small inline-SVG bars. Text lives in HTML around
+   the SVG so it stays crisp; the SVG draws only the bar itself. Amounts
+   are always labelled with words, never by colour alone. */
 
-const DONUT_COLORS = {
-  "Groceries": "#2e7d5b",
-  "Rent & utilities": "#1e4d3b",
-  "Transport": "#7fb069",
-  "Dining out": "#d97706",
-  "Health": "#4f9d8f",
-  "Entertainment": "#e9b44c",
-  "Kids & school": "#8a6fb8",
-  "Home": "#a65d3a",
-};
+var HLCharts = (function () {
+  var GREEN = '#1d5c33';
+  var AMBER = '#b45309';
+  var OVER = '#8c2f1b';
+  var TRACK = '#e7dfcd';
 
-// A donut of how one month's spending splits across categories.
-// parts: [{label, value, color}]. Center shows the month's total spending.
-function donutSVG(parts, total, size) {
-  size = size || 220;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size / 2 - 14;
-  const inner = r - 30;
-  const circ = 2 * Math.PI * r;
-  let offset = 0;
-  const arcs = parts
-    .filter(function (p) {
-      return p.value > 0;
-    })
-    .map(function (p) {
-      const frac = total > 0 ? p.value / total : 0;
-      const len = frac * circ;
-      const gap = frac > 0 ? 2 : 0;
-      const s =
-        '<circle cx="' +
-        cx +
-        '" cy="' +
-        cy +
-        '" r="' +
-        r +
-        '" fill="none" stroke="' +
-        p.color +
-        '" stroke-width="30" stroke-dasharray="' +
-        Math.max(0, len - gap).toFixed(1) +
-        " " +
-        (circ - Math.max(0, len - gap)).toFixed(1) +
-        '" stroke-dashoffset="' +
-        (-offset).toFixed(1) +
-        '" transform="rotate(-90 ' +
-        cx +
-        " " +
-        cy +
-        ')"/>';
-      offset += len;
-      return s;
-    })
-    .join("");
-  const center =
-    '<text x="' +
-    cx +
-    '" y="' +
-    (cy - 6) +
-    '" text-anchor="middle" class="donut-total">' +
-    fmtVND(total) +
-    '</text><text x="' +
-    cx +
-    '" y="' +
-    (cy + 18) +
-    '" text-anchor="middle" class="donut-label">spent this month</text>';
-  return (
-    '<svg viewBox="0 0 ' +
-    size +
-    " " +
-    size +
-    '" role="img" aria-label="Spending by category donut chart">' +
-    '<circle cx="' +
-    cx +
-    '" cy="' +
-    cy +
-    '" r="' +
-    inner +
-    '" fill="none" stroke="#eef2ea" stroke-width="1"/>' +
-    arcs +
-    center +
-    "</svg>"
-  );
-}
-
-// A horizontal budget bar: spent against the limit. Over-budget bars turn
-// amber and carry an "Over" flag.
-function budgetBarSVG(spent, limit, width) {
-  width = width || 220;
-  const ratio = limit > 0 ? spent / limit : 0;
-  const fillW = Math.min(width, Math.round((spent / Math.max(limit, 1)) * width));
-  const over = ratio > 1;
-  const color = over ? "#d97706" : "#2e7d5b";
-  return (
-    '<svg viewBox="0 0 ' +
-    width +
-    ' 14" class="bar-svg" role="img" aria-label="Spent ' +
-    fmtVND(spent) +
-    " of " +
-    fmtVND(limit) +
-    ' budget"><rect x="0" y="0" width="' +
-    width +
-    '" height="14" rx="7" fill="#eef2ea"/><rect x="0" y="0" width="' +
-    fillW +
-    '" height="14" rx="7" fill="' +
-    color +
-    '"/></svg>'
-  );
-}
-
-// Grouped vertical bars: income vs spending per month.
-// rows: [{label, income, spending}]. Returns an SVG string.
-function trendSVG(rows, width, height) {
-  width = width || 640;
-  height = height || 260;
-  const padL = 64;
-  const padB = 28;
-  const padT = 12;
-  const plotW = width - padL - 12;
-  const plotH = height - padT - padB;
-  const maxV = Math.max.apply(
-    null,
-    rows.map(function (r) {
-      return Math.max(r.income, r.spending);
-    })
-  );
-  const top = Math.ceil(maxV / 10000000) * 10000000;
-  const y = function (v) {
-    return padT + plotH - (v / top) * plotH;
-  };
-  const groupW = plotW / rows.length;
-  const barW = Math.min(34, (groupW - 24) / 2);
-  let grid = "";
-  for (let g = 0; g <= 5; g++) {
-    const v = (top / 5) * g;
-    const gy = y(v);
-    grid +=
-      '<line x1="' +
-      padL +
-      '" y1="' +
-      gy.toFixed(1) +
-      '" x2="' +
-      (width - 12) +
-      '" y2="' +
-      gy.toFixed(1) +
-      '" stroke="#e6e9e2" stroke-width="1"/><text x="' +
-      (padL - 8) +
-      '" y="' +
-      (gy + 4).toFixed(1) +
-      '" text-anchor="end" class="axis-label">₫' +
-      Math.round(v / 1000000) +
-      'M</text>';
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
-  let bars = "";
-  rows.forEach(function (row, i) {
-    const gx = padL + i * groupW + groupW / 2;
-    const ih = (row.income / top) * plotH;
-    const sh = (row.spending / top) * plotH;
-    bars +=
-      '<rect x="' +
-      (gx - barW - 3).toFixed(1) +
-      '" y="' +
-      y(row.income).toFixed(1) +
-      '" width="' +
-      barW +
-      '" height="' +
-      ih.toFixed(1) +
-      '" rx="3" fill="#1e4d3b"><title>Income ' +
-      fmtVND(row.income) +
-      '</title></rect>';
-    bars +=
-      '<rect x="' +
-      (gx + 3).toFixed(1) +
-      '" y="' +
-      y(row.spending).toFixed(1) +
-      '" width="' +
-      barW +
-      '" height="' +
-      sh.toFixed(1) +
-      '" rx="3" fill="#d97706"><title>Spending ' +
-      fmtVND(row.spending) +
-      '</title></rect>';
-    bars +=
-      '<text x="' +
-      gx.toFixed(1) +
-      '" y="' +
-      (height - 8) +
-      '" text-anchor="middle" class="axis-label">' +
-      row.label +
-      "</text>";
-  });
-  return (
-    '<svg viewBox="0 0 ' +
-    width +
-    " " +
-    height +
-    '" role="img" aria-label="Monthly income versus spending bar chart">' +
-    grid +
-    bars +
-    "</svg>"
-  );
-}
 
-// A thin progress bar for a savings goal, 0..1 filled.
-function goalBarSVG(frac, width) {
-  width = width || 260;
-  const fillW = Math.round(Math.max(0, Math.min(1, frac)) * width);
-  const done = frac >= 1;
-  return (
-    '<svg viewBox="0 0 ' +
-    width +
-    ' 12" class="bar-svg" role="img" aria-label="Goal ' +
-    Math.round(frac * 100) +
-    '% funded"><rect x="0" y="0" width="' +
-    width +
-    '" height="12" rx="6" fill="#eef2ea"/><rect x="0" y="0" width="' +
-    fillW +
-    '" height="12" rx="6" fill="' +
-    (done ? "#2e7d5b" : "#1e4d3b") +
-    '"/></svg>'
-  );
-}
+  /* One horizontal bar: a track with a fill proportional to value/max.
+     state: 'ok' | 'near' (>=85% of the limit) | 'over' (past the limit).
+     The state is always written out in words next to the bar as well. */
+  function bar(value, max, state) {
+    var ratio = max > 0 ? Math.min(value / max, 1) : 0;
+    var colour = state === 'over' ? OVER : state === 'near' ? AMBER : GREEN;
+    var w = Math.max(ratio * 100, value > 0 ? 1.5 : 0);
+    return '<svg class="bar" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">' +
+      '<rect x="0" y="0" width="100" height="10" rx="2" fill="' + TRACK + '"/>' +
+      '<rect x="0" y="0" width="' + w.toFixed(1) + '" height="10" rx="2" fill="' + colour + '"/>' +
+      '</svg>';
+  }
+
+  /* Plan-vs-actual row for one category: name, spent of limit, the bar,
+     and a right-hand figure (remaining, or the over amount with OVER). */
+  function planRow(row) {
+    var state = row.over > 0 ? 'over' : row.pctUsed >= 0.85 ? 'near' : 'ok';
+    var right = row.over > 0
+      ? '<span class="fig over">₫' + fmtNum(row.over) + ' over</span>'
+      : '<span class="fig">' + HLStore.fmt(row.limit - row.spent) + ' left</span>';
+    var tag = row.over > 0 ? ' <span class="tag over">OVER</span>'
+      : row.pctUsed >= 0.9 ? ' <span class="tag near">Near limit</span>' : '';
+    return '<div class="plan-row">' +
+      '<div class="plan-top"><span class="plan-name">' + esc(row.name) + tag + '</span>' +
+      '<span class="plan-nums">' + HLStore.fmt(row.spent) + ' <span class="dim">of ' + HLStore.fmt(row.limit) + '</span></span></div>' +
+      '<div class="plan-bar">' + bar(row.spent, row.limit, state) +
+      '<span class="plan-pct">' + HLStore.pct(row.pctUsed) + '%</span></div>' +
+      '<div class="plan-right">' + right + '</div>' +
+      '</div>';
+  }
+
+  /* Three month columns (Sep / Oct / Nov) with value labels. November is
+     drawn with a hatch pattern note in the caption, never as a full bar. */
+  function monthColumns(months) {
+    var max = Math.max.apply(null, months.map(function (m) { return m.spent; }));
+    var cols = months.map(function (m) {
+      var h = max > 0 ? Math.round((m.spent / max) * 120) : 0;
+      var fill = m.partial ? 'url(#novhatch)' : GREEN;
+      return '<div class="mcol">' +
+        '<div class="mcol-val">' + HLStore.fmtCompact(m.spent) + '</div>' +
+        '<svg class="mcol-bar" viewBox="0 0 40 120" preserveAspectRatio="none" aria-hidden="true">' +
+        '<defs><pattern id="novhatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">' +
+        '<rect width="6" height="6" fill="' + GREEN + '"/><rect width="3" height="6" fill="#2e7a45"/></pattern></defs>' +
+        '<rect x="4" y="' + (120 - h) + '" width="32" height="' + h + '" rx="3" fill="' + fill + '"/>' +
+        '</svg>' +
+        '<div class="mcol-name">' + esc(m.short) + (m.partial ? ' *' : '') + '</div>' +
+        '<div class="mcol-note">' + (m.partial ? '1–26 Nov' : m.days + ' days') + '</div>' +
+        '</div>';
+    }).join('');
+    return '<div class="month-cols">' + cols + '</div>';
+  }
+
+  /* Breakdown row for the reports page: bar + amount + share, summing
+     to the period total shown above it. */
+  function shareRow(row, total) {
+    return '<div class="plan-row">' +
+      '<div class="plan-top"><span class="plan-name">' + esc(row.name) + '</span>' +
+      '<span class="plan-nums">' + HLStore.fmt(row.amount) + ' <span class="dim">· ' + HLStore.pct(row.share) + '%</span></span></div>' +
+      '<div class="plan-bar">' + bar(row.amount, total, 'ok') +
+      '<span class="plan-pct">' + HLStore.pct(row.share) + '%</span></div>' +
+      '</div>';
+  }
+
+  /* Slim progress bar for a goal card. */
+  function goalBar(pctUsed) {
+    var w = Math.max(Math.min(pctUsed, 1) * 100, pctUsed > 0 ? 2 : 0);
+    return '<svg class="bar" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">' +
+      '<rect x="0" y="0" width="100" height="10" rx="2" fill="' + TRACK + '"/>' +
+      '<rect x="0" y="0" width="' + w.toFixed(1) + '" height="10" rx="2" fill="' + AMBER + '"/>' +
+      '</svg>';
+  }
+
+  function fmtNum(n) {
+    return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  return { bar: bar, planRow: planRow, monthColumns: monthColumns, shareRow: shareRow, goalBar: goalBar, esc: esc };
+})();

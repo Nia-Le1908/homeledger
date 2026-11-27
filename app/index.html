@@ -3,16 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HomeLedger — Household budget</title>
-<meta name="description" content="HomeLedger is the Nguyen family's household budget: income, spending, budgets, savings goals and reports, all in one place.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231e4d3b'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<title>HomeLedger — Nguyen family budget</title>
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAy0lEQVR4nO2XwQ2DMAwAHatr8OffaZA6A8MwAxLT9N8/g9BHFQmsgI0dbFXCTyvJnZMQ5ASFaF7PpZS3xjy+E81tEleBj0TQG05Z6A2nEsgNvDpSRPXrCN+B/xf4DFOcQIZbJNQCFKqVUAnswTQSpwU4yFkJ8Tugqa7tO3aMaAe05yuZxwpYPzNu/qGAFS5ZZ1egFpxbT3QJLTLcRQz/Fzy0E0uVuTxEteMWuAXCBRJATF8A8OuQwncAs4k3ODORJjzhAKQ7zuHZnn8BGLBRXrLYqnUAAAAASUVORK5CYII=
+bytes: 348">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap header-inner">
-    <a class="brand" href="#/"><span class="brand-mark">H</span> HomeLedger</a>
-    <nav aria-label="Main navigation">
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#/">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1d5c33"/><path d="M8 17 16 9l8 8M11 15v8h10v-8" stroke="#f5eeda" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="brand-name">HomeLedger</span>
+      <span class="brand-sub">Nguyen family · Hanoi</span>
+    </a>
+    <nav class="nav" aria-label="Sections">
       <a href="#/">Dashboard</a>
       <a href="#/transactions">Transactions</a>
       <a href="#/budgets">Budgets</a>
@@ -22,10 +26,10 @@
   </div>
 </header>
 <main id="view" class="wrap"></main>
-<footer class="site-footer">
-  <div class="wrap footer-inner">
-    <p>HomeLedger — the Nguyen family's household budget. All figures are the family's own records for September–November 2026.</p>
-    <p><button type="button" class="link-button" data-action="reset-data">Reset demo data</button></p>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p>99 seeded transactions · Sep–Nov 2026 · VND · Edits are stored only in this browser. <button type="button" class="linklike" id="reset-demo">Reset demo data</button></p>
+    <p class="fine">HomeLedger is a household budget site. Spent means the 8 budgeted categories; savings transfers move money to a goal and are not spending.</p>
   </div>
 </footer>
 <script src="data.js"></script>
