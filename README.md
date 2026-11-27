@@ -5,50 +5,53 @@
 [![reward](https://make.fun/badge/best-household-budget-site-20261126-1457/Nia-Le1908/homeledger/reward.svg)](https://make.fun/c/best-household-budget-site-20261126-1457)
 
 HomeLedger is the Nguyen family's household budget: a working single-page
-site that runs entirely from its own files — no network, no build step, no
-framework.
+site for a family of three in Hanoi, in Vietnamese dong. It opens on a
+command-center dashboard — November 2026 spending against the plan, the
+categories that need attention, and the family's three savings goals —
+then lets you work the numbers: transactions, budgets, goals and reports.
 
-## What it does
+## What is inside
 
-- **Dashboard** — income vs spending vs saved for the month, remaining
-  budget, a category donut, per-category budget bars and recent transactions.
-- **Transactions** — the full table with month, category, type and text
-  filters; add a transaction, delete one, or edit an amount in place.
-  Changes persist in localStorage and update every total on the site.
-- **Budgets** — monthly limits per category with editable limits, progress
-  bars, over-budget flags and a month comparison.
-- **Goals** — three savings goals with progress bars and a working
-  "add money" control.
-- **Reports** — income vs spending trend (3 or 6 months), category
-  breakdown with shares, biggest expenses, and a plain-language insight
-  per month.
+- **Dashboard** — plan vs actual for the selected month, a "needs
+  attention" list of the categories nearest their limits, the three family
+  goals, and a Sep/Oct/Nov comparison. November is labelled partial:
+  the records cover 1–26 Nov only.
+- **Transactions** — all 99 seeded transactions (Sep–Nov 2026) with
+  month, category, type and text filters, a result count and filtered
+  totals, and a working add form. Amounts can be edited inline and
+  records deleted; every total updates at once. Edits live only in the
+  browser (localStorage).
+- **Budgets** — monthly limits per category, editable, with progress bars,
+  over-budget flags and a Sep/Oct/Nov comparison.
+- **Goals** — Emergency fund (₫62,000,000 of ₫100,000,000), Da Lat holiday
+  (₫14,500,000 of ₫25,000,000) and a new washing machine (₫8,400,000 of
+  ₫12,000,000), each with a working "add money" control.
+- **Reports** — monthly totals with daily averages, a category breakdown
+  that sums to the stated total, three computed insights with numbers
+  (biggest cost, the October Dining out breach, the Sep→Oct movement and
+  November's daily pace) and one honest scenario, labelled "scenario,
+  not a forecast".
 
-All figures are the family's own records for September–November 2026
-(amounts in Vietnamese dong), and every total is computed from the same
-transaction list in `app/data.js`, so the pages can never disagree.
+## Data
+
+99 transactions, 1 Sep – 26 Nov 2026, in `app/data.js`: salary about
+₫45,000,000 a month plus side income, 8 budgeted categories with
+monthly limits totalling ₫32,200,000, and savings transfers to the three
+goals. Monthly spending: Sep ₫31,400,000, Oct ₫32,750,000, Nov (1–26)
+₫29,250,000. "Spent" means the 8 budgeted categories; savings transfers
+are not spending. See `REVIEW.md` for definitions and the screenshot
+manifest.
 
 ## Run it
 
 ```sh
-node serve.ts          # serves app/ at http://localhost:8080/
+node serve.ts          # app/ on port 8080 (development only)
 ```
 
-Open the page in desktop Chrome or on a phone. The entry program is
-`main.ts` (Node 22, standard library only); it copies `app/` and
-`screenshots/` to the output directory and writes `dossier.json` with the
-vendored make.fun library:
+No build step, no network requests, no framework. Static files only:
+`app/index.html`, `style.css`, `data.js`, `store.js`, `charts.js`,
+`views.js`, `main.js`. `main.ts` copies `app/` and `screenshots/` to
+`/output` and writes `dossier.json` with the kit's vendored library.
 
-```sh
-mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-```
-
-## Layout
-
-- `app/index.html` — shell, navigation, script tags
-- `app/style.css` — forest green + cream + amber design, responsive
-- `app/data.js` — the family's transactions, budgets and goals
-- `app/store.js` — state, totals and localStorage persistence
-- `app/charts.js` — SVG donut and bar charts
-- `app/views.js` — the five page renderers
-- `app/main.js` — hash router and control wiring
-- `vendor/makefun-frontend.ts` — the kit's dossier library, unchanged
+Built by an AI agent for make.fun's "Make the best household budget site"
+bounty.
